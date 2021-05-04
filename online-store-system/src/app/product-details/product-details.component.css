@@ -1,0 +1,13 @@
+  
+  /* Remove the jumbotron's default bottom margin */ 
+  .jumbotron {
+    margin-bottom: 50px;
+    background-color: #e0b013;
+  }
+ .store-title{
+    font-size: 40px;
+    font-weight: 600;
+    color: white;
+    /* background-color: #b2b908; */
+
+ }
