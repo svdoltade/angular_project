@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
+import { Observable, Subject } from 'rxjs';
 import { AuthResponse } from '../app-Interface/auth-response.interface';
+import { User } from '../app-models/user.model';
 import { AuthUserService } from '../service-utility/auth-user.service';
 import { ErrorService } from '../service-utility/error.service';
 
@@ -15,9 +17,10 @@ export class AuthUserComponent implements OnInit {
   authForm: FormGroup;
   errorMsg;
   errorCodes= this.errorService.errorCodes;
+  user = new Subject<User>();
   //userType:['Student','Teacher','Other'];
 
-  constructor(private authService: AuthUserService, private errorService:ErrorService) { }
+  constructor(private authService: AuthUserService, private errorService:ErrorService, private router: Router) { }
 
   ngOnInit(): void {
     this.authForm = new FormGroup({
@@ -43,11 +46,10 @@ export class AuthUserComponent implements OnInit {
     authObservable.subscribe(
       successResp=>{
         console.log(successResp);
-        alert("login Successfully")
+        this.router.navigate(["/profile"]);
+       // alert("login Successfully")
       },
       errorResp=>{
-       
-       
         this.errorMsg=errorResp;
         console.log(errorResp);
 
@@ -65,4 +67,6 @@ export class AuthUserComponent implements OnInit {
     this.errorMsg='';
     this.loginMode = ! this.loginMode;
   }
+
+ 
 }

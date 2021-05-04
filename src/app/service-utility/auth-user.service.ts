@@ -3,15 +3,19 @@ import { HttpClient } from '@angular/common/http';
 import { Config } from '../config';
 import { AuthResponse } from '../app-Interface/auth-response.interface';
 import { ErrorService } from './error.service';
-import { throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { BehaviorSubject, throwError } from 'rxjs';
+import { catchError, exhaustMap, take, tap } from 'rxjs/operators';
+import { User } from '../app-models/user.model';
+import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root'
 })
 export class AuthUserService {
-g
-
-  constructor(private http: HttpClient, private errorService: ErrorService) { }
+  private tokenExpiryTimer: any;
+  user = new BehaviorSubject<User>(null);
+  constructor(private http: HttpClient, private errorService: ErrorService, private router: Router) { 
+   // this.autoSignIn();
+  }
 
   signUp(email,password){
   return this.http.post<AuthResponse>(
@@ -22,6 +26,9 @@ g
       }) .pipe(
         catchError(err => {
           return  this.errorService.handleError(err)
+        }),
+        tap(res=>{
+          this.authothicateUser(res.email,res.localId,res.idToken,+res.expiresIn);
         })
     )
     }
@@ -35,7 +42,55 @@ g
         }).pipe(
           catchError(err => {
             return  this.errorService.handleError(err)
+          }),
+          tap(res=>{
+            this.authothicateUser(res.email,res.localId,res.idToken,+res.expiresIn);
+           
           })
       )
+    }
+
+    private authothicateUser(email, userId,token,expiryIn){
+      //let expiryTime =5000;
+      const expryDate= new Date(new Date().getTime() + expiryIn*1000);
+    const user = new User(email,userId,token,expryDate);
+    console.log('user data', user);
+    this.user.next(user);
+   // alert(expiryIn);
+   this.autoSignOut(expiryIn*1000);
+    localStorage.setItem('LogInUserData', JSON.stringify(user));
+    }
+
+  autoSignIn(){
+   const userData =JSON.parse(localStorage.getItem('LogInUserData')) ;
+   console.log('userData',userData);
+    if(!userData){
+      return;
+    }
+    const loggedInUser = new User(userData.email, userData.id,userData.token,new Date(userData.tokenExpiryDate));
+    
+    console.log('loggedInUser', loggedInUser);
+   // if(loggedInUser.userToken){
+    //  this.user.next(loggedInUser);
+    //}
+    this.user.next(loggedInUser);
+    const expiryDuration= new Date(userData.tokenExpiryDate).getTime() - new Date().getTime();
+    this.autoSignOut(expiryDuration);
+  }
+   
+    signOut(){
+      this.user.next(null);
+      localStorage.removeItem('LogInUserData');
+      if(this.tokenExpiryTimer){
+        clearTimeout(this.tokenExpiryTimer);
+      }
+      this.tokenExpiryTimer = null;
+    }
+
+    autoSignOut(expiryDuration: number){
+     this.tokenExpiryTimer=  setTimeout(()=>{
+        this.signOut();
+      },expiryDuration);
+      this.router.navigate(["/login"]);
     }
 }
