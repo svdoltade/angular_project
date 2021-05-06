@@ -20,11 +20,15 @@
         <li routerLinkActive="active" >
            <a  routerLink="/login" *ngIf="!isLoggedIn"><span class="glyphicon glyphicon-user"></span> Login / Register</a>
         </li>
-        <li routerLinkActive="active" >
-          <a  routerLink="/login" *ngIf="isLoggedIn" (click)="onSignOut()"><span class="glyphicon glyphicon-user"></span> Logout</a>
+        <li class="active" >
+          <a  routerLink="/login" *ngIf="isLoggedIn"><span class="glyphicon glyphicon-user"></span> 
+            Welcome {{UserInfo.displayName? UserInfo.displayName :'User'}}</a>
        </li>
-        <li><a  routerLink="/"><span class="glyphicon glyphicon-shopping-cart"></span> Cart</a></li>
+       <li routerLinkActive="active" >
+        <a  routerLink="/login" *ngIf="isLoggedIn" (click)="onSignOut()"><span class="glyphicon glyphicon-user"></span> Logout</a>
+     </li>
       </ul>
+      
     </div>
   </div>
 </nav>

@@ -12,6 +12,13 @@ import { Router } from '@angular/router';
 })
 export class AuthUserService {
   private tokenExpiryTimer: any;
+  profileInfo = new BehaviorSubject(
+          {
+            displayName:'',
+            email:'',
+            photoUrl:''
+          }
+  );
   user = new BehaviorSubject<User>(null);
   constructor(private http: HttpClient, private errorService: ErrorService, private router: Router) { 
    // this.autoSignIn();
@@ -49,6 +56,45 @@ export class AuthUserService {
           })
       )
     }
+    
+    getUserData(token){
+      //alert('getUserData method');
+      this.http.post<any>(
+        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${Config.API_KEY}`,{
+       idToken: token
+        }).subscribe(res=>{
+         
+          this.profileInfo.next({
+            displayName:res.users[0].displayName,
+            email:res.users[0].email,
+            photoUrl:res.users[0].photoUrl
+          })
+
+        })
+    }
+
+
+
+    updateUserProfile(token,displayName,photoUrl){
+      //alert("updateUserProfile");
+      return this.http.post(
+        `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${Config.API_KEY}`,{
+          idToken: token,
+          displayName: displayName,
+          photoUrl: photoUrl,
+          returnSecureToken:true
+        }).pipe(
+          catchError(err => {
+            return  this.errorService.handleError(err)
+          }),
+          tap(res=>{
+           // console.log('updateUserProfile',res)
+           // this.authothicateUser(res.email,res.localId,res.idToken,+res.expiresIn);
+           
+          })
+      )
+    }
+
 
     private authothicateUser(email, userId,token,expiryIn){
       //let expiryTime =5000;
@@ -59,6 +105,7 @@ export class AuthUserService {
    // alert(expiryIn);
    this.autoSignOut(expiryIn*1000);
     localStorage.setItem('LogInUserData', JSON.stringify(user));
+    this.getUserData(token);
     }
 
   autoSignIn(){
@@ -93,4 +140,5 @@ export class AuthUserService {
       },expiryDuration);
       this.router.navigate(["/login"]);
     }
+
 }
